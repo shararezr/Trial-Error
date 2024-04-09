@@ -10,12 +10,12 @@ import numpy as np
 import logging
 import time
 import pickle
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from tools import Data_Train, Data_Val, Data_Test, Data_CHLS
 from model import create_model_diffu, Att_Diffuse_model
 from training import model_train, LSHT_inference
 from collections import Counter
-plt.style.use("seaborn-dark-palette")
+#plt.style.use("seaborn-dark-palette")
 
 
 # Define default parameters in a dictionary
@@ -151,7 +151,7 @@ def cold_hot_long_short(data_raw, dataset_name):
 
 
 
-
+'''
 def plot_training_progress(train_losses, val_metrics):
     plt.figure(figsize=(12, 6))
     # Define marker styles for each metric
@@ -234,7 +234,7 @@ def test_result(test_results):
     plt.tight_layout()
     plt.show()
 
-
+'''
 def main(args):
     fix_random_seed_as(args.random_seed)
     path_data = 'dataset.pkl'
@@ -271,12 +271,12 @@ def main(args):
 
     best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates = model_train(tra_data_loader, val_data_loader, test_data_loader, rec_diffu_joint_model, args, logger)
 
-    plot_training_progress(train_losses, val_metrics_dict_mean)
-    plot_learning_rate(learning_rates)
-    test_result(test_results)
+    #plot_training_progress(train_losses, val_metrics_dict_mean)
+    #plot_learning_rate(learning_rates)
+    #test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
     num_cluster = 12
-    plot_density_pred(target_pre, label_pre,num_cluster)
+    #plot_density_pred(target_pre, label_pre,num_cluster)
 
 
     if args.long_head:
