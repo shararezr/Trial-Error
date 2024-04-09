@@ -240,7 +240,7 @@ def test_result(test_results):
 
 def main(args):
     fix_random_seed_as(args.random_seed)
-    path_data = '../datasets/data/' + args.dataset + '/dataset.pkl'
+    path_data = 'dataset.pkl'
     with open(path_data, 'rb') as f:
         data_raw = pickle.load(f)
 
