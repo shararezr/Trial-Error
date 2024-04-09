@@ -321,5 +321,6 @@ def main(args):
 
     return best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates
 
-
+if __name__ == '__main__':
+    main(args)
 
