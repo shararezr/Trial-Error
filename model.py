@@ -1,266 +1,148 @@
 import torch.nn as nn
-import torch.optim as optim
-import datetime
 import torch
-import numpy as np
-import copy
-import time
-import pickle
 import math
 from diffurec import DiffuRec
 import torch.nn.functional as F
+import copy
+import numpy as np
 from step_sample import LossAwareSampler
 import torch as th
 
 
+class LayerNorm(nn.Module):
+    def __init__(self, hidden_size, eps=1e-12):
+        """Construct a layernorm module in the TF style (epsilon inside the square root).
+        """
+        super(LayerNorm, self).__init__()
+        self.weight = nn.Parameter(torch.ones(hidden_size))
+        self.bias = nn.Parameter(torch.zeros(hidden_size))
+        self.variance_epsilon = eps
 
-def optimizers(model, args):
-    if args.optimizer.lower() == 'adam':
-        return optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
-    elif args.optimizer.lower() == 'sgd':
-        return optim.SGD(model.parameters(), lr=args.lr, weight_decay=args.weight_decay, momentum=args.momentum)
-    else:
-        raise ValueError
-
-
-def cal_hr(label, predict, ks):
-    max_ks = max(ks)
-    _, topk_predict = torch.topk(predict, k=max_ks, dim=-1)
-    hit = label == topk_predict
-    hr = [hit[:, :ks[i]].sum().item()/label.size()[0] for i in range(len(ks))]
-    return hr
+    def forward(self, x):
+        u = x.mean(-1, keepdim=True)
+        s = (x - u).pow(2).mean(-1, keepdim=True)
+        x = (x - u) / torch.sqrt(s + self.variance_epsilon)
+        return self.weight * x + self.bias
 
 
-def cal_ndcg(label, predict, ks):
-    max_ks = max(ks)
-    _, topk_predict = torch.topk(predict, k=max_ks, dim=-1)
-    hit = (label == topk_predict).int()
-    ndcg = []
-    for k in ks:
-        max_dcg = dcg(torch.tensor([1] + [0] * (k-1)))
-        predict_dcg = dcg(hit[:, :k])
-        ndcg.append((predict_dcg/max_dcg).mean().item())
-    return ndcg
+class Att_Diffuse_model(nn.Module):
+    def __init__(self, diffu, args):
+        super(Att_Diffuse_model, self).__init__()
+        self.emb_dim = args.hidden_size
+        self.item_num = args.item_num+1
+        self.item_embeddings = nn.Embedding(self.item_num, self.emb_dim)
+        self.embed_dropout = nn.Dropout(args.emb_dropout)
+        self.position_embeddings = nn.Embedding(args.max_len, args.hidden_size)
+        self.LayerNorm = LayerNorm(args.hidden_size, eps=1e-12)
+        self.dropout = nn.Dropout(args.dropout)
+        self.diffu = diffu
+        self.loss_ce = nn.CrossEntropyLoss()
+        self.loss_ce_rec = nn.CrossEntropyLoss(reduction='none')
+        self.loss_mse = nn.MSELoss()
+
+    def diffu_pre(self, item_rep, tag_emb, mask_seq):
+        seq_rep_diffu, item_rep_out, weights, t  = self.diffu(item_rep, tag_emb, mask_seq)
+        return seq_rep_diffu, item_rep_out, weights, t
+
+    def reverse(self, item_rep, noise_x_t, mask_seq):
+        reverse_pre = self.diffu.reverse_p_sample(item_rep, noise_x_t, mask_seq)
+        return reverse_pre
+
+    def loss_rec(self, scores, labels):
+        return self.loss_ce(scores, labels.squeeze(-1))
+
+    def loss_diffu(self, rep_diffu, labels):
+        scores = torch.matmul(rep_diffu, self.item_embeddings.weight.t())
+        scores_pos = scores.gather(1 , labels)  ## labels: b x 1
+        scores_neg_mean = (torch.sum(scores, dim=-1).unsqueeze(-1)-scores_pos)/(scores.shape[1]-1)
+
+        loss = torch.min(-torch.log(torch.mean(torch.sigmoid((scores_pos - scores_neg_mean).squeeze(-1)))), torch.tensor(1e8))
+
+        # if isinstance(self.diffu.schedule_sampler, LossAwareSampler):
+        #     self.diffu.schedule_sampler.update_with_all_losses(t, loss.detach())
+        # loss = (loss * weights).mean()
+        return loss
+
+    def loss_diffu_ce(self, rep_diffu, labels):
+        scores = torch.matmul(rep_diffu, self.item_embeddings.weight.t())
+        """
+        ### norm scores
+        item_emb_norm = F.normalize(self.item_embeddings.weight, dim=-1)
+        rep_diffu_norm = F.normalize(rep_diffu, dim=-1)
+        temperature = 0.07
+        scores = torch.matmul(rep_diffu_norm, item_emb_norm.t())/temperature
+        """
+        return self.loss_ce(scores, labels.squeeze(-1))
+
+    def diffu_rep_pre(self, rep_diffu):
+        scores = torch.matmul(rep_diffu, self.item_embeddings.weight.t())
+        return scores
+
+    def loss_rmse(self, rep_diffu, labels):
+        rep_gt = self.item_embeddings(labels).squeeze(1)
+        return torch.sqrt(self.loss_mse(rep_gt, rep_diffu))
+
+    def routing_rep_pre(self, rep_diffu):
+        item_norm = (self.item_embeddings.weight**2).sum(-1).view(-1, 1)  ## N x 1
+        rep_norm = (rep_diffu**2).sum(-1).view(-1, 1)  ## B x 1
+        sim = torch.matmul(rep_diffu, self.item_embeddings.weight.t())  ## B x N
+        dist = rep_norm + item_norm.transpose(0, 1) - 2.0 * sim
+        dist = torch.clamp(dist, 0.0, np.inf)
+
+        return -dist
+
+    def regularization_rep(self, seq_rep, mask_seq):
+        seqs_norm = seq_rep/seq_rep.norm(dim=-1)[:, :, None]
+        seqs_norm = seqs_norm * mask_seq.unsqueeze(-1)
+        cos_mat = torch.matmul(seqs_norm, seqs_norm.transpose(1, 2))
+        cos_sim = torch.mean(torch.mean(torch.sum(torch.sigmoid(-cos_mat), dim=-1), dim=-1), dim=-1)  ## not real mean
+        return cos_sim
+
+    def regularization_seq_item_rep(self, seq_rep, item_rep, mask_seq):
+        item_norm = item_rep/item_rep.norm(dim=-1)[:, :, None]
+        item_norm = item_norm * mask_seq.unsqueeze(-1)
+
+        seq_rep_norm = seq_rep/seq_rep.norm(dim=-1)[:, None]
+        sim_mat = torch.sigmoid(-torch.matmul(item_norm, seq_rep_norm.unsqueeze(-1)).squeeze(-1))
+        return torch.mean(torch.sum(sim_mat, dim=-1)/torch.sum(mask_seq, dim=-1))
+
+    def forward(self, sequence, tag, train_flag=True):
+        seq_length = sequence.size(1)
+        # position_ids = torch.arange(seq_length, dtype=torch.long, device=sequence.device)
+        # position_ids = position_ids.unsqueeze(0).expand_as(sequence)
+        # position_embeddings = self.position_embeddings(position_ids)
+
+        item_embeddings = self.item_embeddings(sequence)
+        item_embeddings = self.embed_dropout(item_embeddings)  ## dropout first than layernorm
+
+        # item_embeddings = item_embeddings + position_embeddings
+
+        item_embeddings = self.LayerNorm(item_embeddings)
+
+        mask_seq = (sequence>0).float()
+
+        if train_flag:
+            tag_emb = self.item_embeddings(tag.squeeze(-1))  ## B x H
+            rep_diffu, rep_item, weights, t = self.diffu_pre(item_embeddings, tag_emb, mask_seq)
+
+            # item_rep_dis = self.regularization_rep(rep_item, mask_seq)
+            # seq_rep_dis = self.regularization_seq_item_rep(rep_diffu, rep_item, mask_seq)
+
+            item_rep_dis = None
+            seq_rep_dis = None
+        else:
+            # noise_x_t = th.randn_like(tag_emb)
+            noise_x_t = th.randn_like(item_embeddings[:,-1,:])
+            rep_diffu = self.reverse(item_embeddings, noise_x_t, mask_seq)
+            weights, t, item_rep_dis, seq_rep_dis = None, None, None, None
+
+        # item_rep = self.model_main(item_embeddings, rep_diffu, mask_seq)
+        # seq_rep = item_rep[:, -1, :]
+        # scores = torch.matmul(seq_rep, self.item_embeddings.weight.t())
+        scores = None
+        return scores, rep_diffu, weights, t, item_rep_dis, seq_rep_dis
 
 
-def dcg(hit):
-    log2 = torch.log2(torch.arange(1, hit.size()[-1] + 1) + 1).unsqueeze(0)
-    rel = (hit/log2).sum(dim=-1)
-    return rel
-
-
-def hrs_and_ndcgs_k(scores, labels, ks):
-    metrics = {}
-    ndcg = cal_ndcg(labels.clone().detach().to('cpu'), scores.clone().detach().to('cpu'), ks)
-    hr = cal_hr(labels.clone().detach().to('cpu'), scores.clone().detach().to('cpu'), ks)
-    for k, ndcg_temp, hr_temp in zip(ks, ndcg, hr):
-        metrics['HR@%d' % k] = hr_temp
-        metrics['NDCG@%d' % k] = ndcg_temp
-    return metrics
-
-
-def LSHT_inference(model_joint, args, data_loader):
-    device = args.device
-    model_joint = model_joint.to(device)
-    with torch.no_grad():
-        test_metrics_dict = {'HR@5': [], 'NDCG@5': [], 'HR@10': [], 'NDCG@10': [], 'HR@20': [], 'NDCG@20': []}
-        test_metrics_dict_mean = {}
-        for test_batch in data_loader:
-            test_batch = [x.to(device) for x in test_batch]
-
-            scores_rec, rep_diffu, _, _, _, _ = model_joint(test_batch[0], test_batch[1], train_flag=False)
-            scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
-            metrics = hrs_and_ndcgs_k(scores_rec_diffu, test_batch[1], [5, 10, 20])
-            for k, v in metrics.items():
-                test_metrics_dict[k].append(v)
-    for key_temp, values_temp in test_metrics_dict.items():
-        values_mean = round(np.mean(values_temp) * 100, 4)
-        test_metrics_dict_mean[key_temp] = values_mean
-    print(test_metrics_dict_mean)
-
-
-def model_train(tra_data_loader, val_data_loader, test_data_loader, model_joint, args, logger):
-    epochs = args.epochs
-    device = args.device
-    metric_ks = args.metric_ks
-    # Lists to store training loss and evaluation metrics for plotting
-    train_losses = []
-    # Collect learning rates at each epoch
-    learning_rates = []
-    # Collect predictions during evaluation
-    target_pre = []
-    label_pre = []
-    val_metrics_dict_mean = {'HR@5': [], 'NDCG@5': [], 'HR@10': [], 'NDCG@10': [], 'HR@20': [], 'NDCG@20': []}
-
-
-
-    # Assuming model_joint is a DataParallel object
-    # Access the underlying model
-    model_joint = model_joint.to(device)
-    is_parallel = args.num_gpu > 1
-    if is_parallel:
-        model_joint = nn.DataParallel(model_joint)
-    optimizer = optimizers(model_joint, args)
-    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.decay_step, gamma=args.gamma)
-    best_metrics_dict = {'Best_HR@5': 0, 'Best_NDCG@5': 0, 'Best_HR@10': 0, 'Best_NDCG@10': 0, 'Best_HR@20': 0, 'Best_NDCG@20': 0}
-    best_epoch = {'Best_epoch_HR@5': 0, 'Best_epoch_NDCG@5': 0, 'Best_epoch_HR@10': 0, 'Best_epoch_NDCG@10': 0, 'Best_epoch_HR@20': 0, 'Best_epoch_NDCG@20': 0}
-    bad_count = 0
-
-    for epoch_temp in range(epochs):
-        print('Epoch: {}'.format(epoch_temp))
-        logger.info('Epoch: {}'.format(epoch_temp))
-        model_joint.train()
-
-        flag_update = 0
-        for index_temp, train_batch in enumerate(tra_data_loader):
-            train_batch = [x.to(device) for x in train_batch]
-            optimizer.zero_grad()
-            scores, diffu_rep, weights, t, item_rep_dis, seq_rep_dis = model_joint(train_batch[0], train_batch[1], train_flag=True)
-
-            if is_parallel:
-              loss_diffu_value = model_joint.module.loss_diffu_ce(diffu_rep, train_batch[1])  ## use this not above
-            if is_parallel==False:
-              loss_diffu_value = model_joint.loss_diffu_ce(diffu_rep, train_batch[1])
-
-            loss_all = loss_diffu_value
-            loss_all.backward()
-
-            optimizer.step()
-            if index_temp % int(len(tra_data_loader) / 5 + 1) == 0:
-                print('[%d/%d] Loss: %.4f' % (index_temp, len(tra_data_loader), loss_all.item()))
-                logger.info('[%d/%d] Loss: %.4f' % (index_temp, len(tra_data_loader), loss_all.item()))
-        print("loss in epoch {}: {}".format(epoch_temp, loss_all.item()))
-        # Append training loss to train_losses list
-        train_losses.append(loss_all.item())
-        lr_scheduler.step()
-        # Collect learning rate for this epoch
-        learning_rates.append(optimizer.param_groups[0]["lr"])
-
-
-        if epoch_temp != 0 and epoch_temp % args.eval_interval == 0:
-            print('start predicting: ', datetime.datetime.now())
-            logger.info('start predicting: {}'.format(datetime.datetime.now()))
-            model_joint.eval()
-            with torch.no_grad():
-                metrics_dict = {'HR@5': [], 'NDCG@5': [], 'HR@10': [], 'NDCG@10': [], 'HR@20': [], 'NDCG@20': []}
-                # metrics_dict_mean = {}
-                for val_batch in val_data_loader:
-                    val_batch = [x.to(device) for x in val_batch]
-                    scores_rec, rep_diffu, _, _, _, _ = model_joint(val_batch[0], val_batch[1], train_flag=False)
-                    if is_parallel:
-                      scores_rec_diffu = model_joint.module.diffu_rep_pre(rep_diffu)    ### inner_production
-                    if is_parallel==False:
-                      scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
-
-                    # scores_rec_diffu = model_joint.routing_rep_pre(rep_diffu)   ### routing_rep_pre
-                    metrics = hrs_and_ndcgs_k(scores_rec_diffu, val_batch[1], metric_ks)
-
-
-
-                    for k, v in metrics.items():
-                        metrics_dict[k].append(v)
-                            # Append evaluation metrics to respective lists    for key_temp, values_temp in test_metrics_dict.items():
-
-
-
-
-            for key_temp, values_temp in metrics_dict.items():
-                values_mean = round(np.mean(values_temp) * 100, 4)
-                val_metrics_dict_mean[key_temp].append(values_mean)
-                if values_mean > best_metrics_dict['Best_' + key_temp]:
-                    flag_update = 1
-                    bad_count = 0
-                    best_metrics_dict['Best_' + key_temp] = values_mean
-                    best_epoch['Best_epoch_' + key_temp] = epoch_temp
-
-            if flag_update == 0:
-                bad_count += 1
-            else:
-                print(best_metrics_dict)
-                print(best_epoch)
-                logger.info(best_metrics_dict)
-                logger.info(best_epoch)
-                best_model = copy.deepcopy(model_joint)
-            if bad_count >= args.patience:
-                break
-
-
-    logger.info(best_metrics_dict)
-    logger.info(best_epoch)
-
-    if args.eval_interval > epochs:
-        best_model = copy.deepcopy(model_joint)
-
-    best_model = copy.deepcopy(model_joint)
-    top_100_item = []
-    with torch.no_grad():
-        test_metrics_dict = {'HR@5': [], 'NDCG@5': [], 'HR@10': [], 'NDCG@10': [], 'HR@20': [], 'NDCG@20': []}
-        test_metrics_dict_mean = {}
-        for test_batch in test_data_loader:
-            test_batch = [x.to(device) for x in test_batch]
-            scores_rec, rep_diffu, _, _, _, _ = best_model(test_batch[0], test_batch[1], train_flag=False)
-            #scores_rec_diffu = best_model.diffu_rep_pre(rep_diffu)   ### Inner Production
-            if is_parallel:
-              scores_rec_diffu = best_model.module.diffu_rep_pre(rep_diffu)    ### inner_production
-            if is_parallel==False:
-              scores_rec_diffu = best_model.diffu_rep_pre(rep_diffu)
-            # scores_rec_diffu = best_model.routing_rep_pre(rep_diffu)   ### routing
-
-            _, indices = torch.topk(scores_rec_diffu, k=100)
-            top_100_item.append(indices)
-
-            metrics = hrs_and_ndcgs_k(scores_rec_diffu, test_batch[1], metric_ks)
-            target_pre.append(rep_diffu.cpu().numpy())
-            label_pre.append(scores_rec_diffu.cpu().numpy())
-
-            # Collect predictions
-            for k, v in metrics.items():
-                test_metrics_dict[k].append(v)
-    # Find the maximum length of arrays in the list
-    max_length = max(len(arr) for arr in target_pre)
-
-
-    # Pad shorter arrays with zeros to match the maximum length
-    padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in target_pre]
-    padded_arrays_l = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in label_pre]
-
-
-    # Concatenate the padded arrays into a single array
-    target_pre_array = np.concatenate(padded_arrays)
-    label_pre_array = np.concatenate(padded_arrays_l)
-
-
-    for key_temp, values_temp in test_metrics_dict.items():
-        values_mean = round(np.mean(values_temp) * 100, 4)
-        test_metrics_dict_mean[key_temp] = values_mean
-    print('Test------------------------------------------------------')
-    logger.info('Test------------------------------------------------------')
-    print(test_metrics_dict_mean)
-    logger.info(test_metrics_dict_mean)
-    print('Best Eval---------------------------------------------------------')
-    logger.info('Best Eval---------------------------------------------------------')
-    print(best_metrics_dict)
-    print(best_epoch)
-    logger.info(best_metrics_dict)
-    logger.info(best_epoch)
-
-    print(args)
-
-    if args.diversity_measure:
-        path_data = '../datasets/data/category/' + args.dataset +'/id_category_dict.pkl'
-        with open(path_data, 'rb') as f:
-            id_category_dict = pickle.load(f)
-        id_top_100 = torch.cat(top_100_item, dim=0).tolist()
-        category_list_100 = []
-        for id_top_100_temp in id_top_100:
-            category_temp_list = []
-            for id_temp in id_top_100_temp:
-                category_temp_list.append(id_category_dict[id_temp])
-            category_list_100.append(category_temp_list)
-        category_list_100.append(category_list_100)
-        path_data_category = '../datasets/data/category/' + args.dataset +'/DiffuRec_top100_category.pkl'
-        with open(path_data_category, 'wb') as f:
-            pickle.dump(category_list_100, f)
-
-
-    return best_model, test_metrics_dict_mean, val_metrics_dict_mean, train_losses, target_pre_array, label_pre_array, learning_rates
+def create_model_diffu(args):
+    diffu_pre = DiffuRec(args)
+    return diffu_pre
