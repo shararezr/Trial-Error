@@ -66,8 +66,6 @@ for arg, default_value in default_params.items():
 args = parser.parse_args([])
 
 
-print(args)
-
 if not os.path.exists(args.log_file):
     os.makedirs(args.log_file)
 if not os.path.exists(args.log_file + args.dataset):
