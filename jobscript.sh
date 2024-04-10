@@ -17,7 +17,7 @@
 ### -- set the email address -- 
 ### Please uncomment the following line and put in your e-mail address,
 ### if you want to receive e-mail notifications on a non-default address
-###BSUB -u zr.sharare@gmail.com
+#BSUB -u zr.sharare@gmail.com
 ### -- send notification at start -- 
 #BSUB -B 
 ### -- send notification at completion -- 
