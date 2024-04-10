@@ -3,9 +3,9 @@
 ### -- specify queue -- 
 #BSUB -q hpc
 ### -- set the job Name -- 
-#BSUB -J test_DiffuRec
+#BSUB -J testDiffuRec
 ### -- ask for number of cores (default: 1) -- 
-#BSUB -n 1
+#BSUB -n 3
 ### -- specify that the cores must be on the same host -- 
 #BSUB -R "span[hosts=1]"
 ### -- specify that we need 4GB of memory per core/slot -- 
@@ -17,7 +17,7 @@
 ### -- set the email address -- 
 ### Please uncomment the following line and put in your e-mail address,
 ### if you want to receive e-mail notifications on a non-default address
-#BSUB -u zr.sharare@gmail.com
+###BSUB -u zr.sharare@gmail.com
 ### -- send notification at start -- 
 #BSUB -B 
 ### -- send notification at completion -- 
@@ -27,5 +27,5 @@
 #BSUB -o Output_%J.out 
 #BSUB -e Output_%J.err 
 
-python3 main.py
+python3 main.py 
 
