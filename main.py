@@ -10,12 +10,12 @@ import numpy as np
 import logging
 import time
 import pickle
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from tools import Data_Train, Data_Val, Data_Test, Data_CHLS
 from model import create_model_diffu, Att_Diffuse_model
 from training import model_train, LSHT_inference
 from collections import Counter
-#plt.style.use("seaborn-dark-palette")
+plt.style.use("seaborn-dark-palette")
 
 
 # Define default parameters in a dictionary
@@ -151,7 +151,7 @@ def cold_hot_long_short(data_raw, dataset_name):
 
 
 
-'''
+
 def plot_training_progress(train_losses, val_metrics):
     plt.figure(figsize=(12, 6))
     # Define marker styles for each metric
@@ -174,11 +174,13 @@ def plot_training_progress(train_losses, val_metrics):
     plt.xlabel('Epoch')
     plt.ylabel('Metric Value')
     plt.title('Validation Metrics')
-    plt.legend()
+    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.close()  # Close the plot to release memory
 
     # Adjust layout and display plot
     plt.tight_layout()
-    plt.show()
+    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.close()  # Close the plot to release memory
 
 
 def plot_learning_rate(lr_scheduler):
@@ -189,7 +191,8 @@ def plot_learning_rate(lr_scheduler):
     plt.ylabel('Learning Rate')
     plt.title('Learning Rate Schedule')
     plt.grid(True)
-    plt.show()
+    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.close()  # Close the plot to release memory
 
 from sklearn.manifold import TSNE
 import numpy as np
@@ -210,7 +213,8 @@ def plot_density_pred(all_predictions, target_y, n_clusters):
     scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=cluster_labels, cmap='tab10', s=1)
     plt.legend(*scatter.legend_elements(), title="Cluster")
     plt.title('t-SNE of Recommended Items with Clustering')
-    plt.show()
+    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.close()  # Close the plot to release memory
 
 
 def test_result(test_results):
@@ -232,9 +236,10 @@ def test_result(test_results):
 
     # Displaying the plot
     plt.tight_layout()
-    plt.show()
+    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.close()  # Close the plot to release memory
 
-'''
+
 def main(args):
     fix_random_seed_as(args.random_seed)
     path_data = 'dataset.pkl'
@@ -271,12 +276,32 @@ def main(args):
 
     best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates = model_train(tra_data_loader, val_data_loader, test_data_loader, rec_diffu_joint_model, args, logger)
 
-    #plot_training_progress(train_losses, val_metrics_dict_mean)
-    #plot_learning_rate(learning_rates)
-    #test_result(test_results)
-    #plot_density_pred(scores_rec_diffu)
-    num_cluster = 12
-    #plot_density_pred(target_pre, label_pre,num_cluster)
+    plot_training_progress(train_losses, val_metrics_dict_mean)
+    plot_learning_rate(learning_rates)
+    test_result(test_results)
+    plot_density_pred(scores_rec_diffu)
+    num_cluster = 6
+    plot_density_pred(target_pre, label_pre,num_cluster)
+
+    # Save the best model
+    torch.save(best_model.state_dict(), 'best_model.pth')
+    
+    # Save the test results, validation metrics, and training losses
+    with open('test_results.pkl', 'wb') as f:
+        pickle.dump(test_results, f)
+    
+    with open('val_metrics.pkl', 'wb') as f:
+        pickle.dump(val_metrics_dict_mean, f)
+    
+    with open('train_losses.pkl', 'wb') as f:
+        pickle.dump(train_losses, f)
+    
+    # Save the target predictions and labels
+    np.save('target_predictions.npy', target_pre)
+    np.save('label_predictions.npy', label_pre)
+    
+    # Save the learning rates
+    np.save('learning_rates.npy', learning_rates)
 
 
     if args.long_head:
