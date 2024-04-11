@@ -256,7 +256,12 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=500, num_
                 predictions[i] = []
                 for _ in range(num_iterations):
                     scores_rec, rep_diffu, _, _, _, _ = model_joint(sample[0], sample[1], train_flag=False)
-                    scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
+                    if is_parallel:
+                      scores_rec_diffu = model_joint.module.diffu_rep_pre(rep_diffu)    ### inner_production
+                    if is_parallel==False:
+                      scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
+
+
                     predictions[i].append(scores_rec_diffu.cpu().numpy())
 
         # Plotting distributions for each user
