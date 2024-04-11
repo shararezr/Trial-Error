@@ -335,27 +335,27 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_
     device = args.device
     model_joint = model_joint.to(device)
 
-    # Define colors based on number of samples
-    colors = plt.cm.rainbow(np.linspace(0, 1, num_samples))
-
     # List to store predictions
     predictions = []
     test_sample_l = []
-    y = []
+
+    # Create an array to store y values
+    y = np.zeros(num_iterations * num_samples)
+
     for i in range(num_samples):
-      # Select a single test sample
-      test_iterator = iter(data_loader)
-      test_sample_l.append(next(test_iterator))
+        # Select a single test sample
+        test_iterator = iter(data_loader)
+        test_sample_l.append(next(test_iterator))
 
     with torch.no_grad():
         for i in range(num_samples):
-          test_sample = test_sample_l[i]
-          for _ in range(num_iterations):
-            # Select a single test sample
-            y.append(i)
+            test_sample = test_sample_l[i]
+            for j in range(num_iterations):
+                # Append the current sample index to the y array
+                y[i * num_iterations + j] = i
 
-            scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
-            predictions.append(rep_diffu.cpu().numpy())
+                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
+                predictions.append(rep_diffu.cpu().numpy())
                 
         max_length = max(len(arr) for arr in predictions)
         
@@ -363,6 +363,7 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_
         padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
         # Concatenate the padded arrays into a single array
         target_pre_array = np.concatenate(padded_arrays)
+        
         # Apply t-SNE
         tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
         X_tsne = tsne.fit_transform(target_pre_array)
