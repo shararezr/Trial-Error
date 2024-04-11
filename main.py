@@ -318,7 +318,7 @@ def main(args):
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
+    #diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
     plot_training_progress(train_losses)
     plot_val_progress(val_metrics_dict_mean)
     plot_learning_rate(learning_rates)
