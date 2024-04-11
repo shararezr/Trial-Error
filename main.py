@@ -239,6 +239,7 @@ def test_result(test_results):
 
 
 def diversity_inference(model_joint, args, data_loader, num_iterations=500, num_samples=5):
+    is_parallel = args.num_gpu > 1
     device = args.device
     model_joint = model_joint.to(device)
     with torch.no_grad():
