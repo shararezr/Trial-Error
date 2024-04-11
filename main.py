@@ -249,6 +249,8 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=50, num_s
     num_iterations = 50
 
     with torch.no_grad():
+        # Define colors based on number of samples
+        colors = cm.rainbow(np.linspace(0, 1, num_samples))
         for i in range (num_samples):
             # List to store predictions
             predictions = []
@@ -268,13 +270,10 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=50, num_s
             target_pre_array = np.concatenate(padded_arrays)
         
             # Plotting distributions for each user
-        
-            # Apply t-SNE
-            tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
-            X_tsne = tsne.fit_transform(target_pre_array)
-            # Plot the result
+            # Plot the result with colors based on number of samples
             plt.figure(figsize=(12, 8))
-            scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],cmap='tab10', s=1)
+   
+            plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=colors[i], label=f'Sample {i+1}', s=1)
             plt.legend(*scatter.legend_elements(), title="Item Representation")
             plt.title('t-SNE of Recommended Items')
             plt.legend()
