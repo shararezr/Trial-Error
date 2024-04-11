@@ -164,6 +164,8 @@ def plot_training_progress(train_losses, val_metrics):
     plt.ylabel('Loss')
     plt.title('Training Loss')
     plt.legend()
+    plt.savefig('plot1.png')  # Save the plot as an image file
+    plt.close()  # Close the plot to release memory
 
     # Plot validation metrics
     plt.subplot(1, 2, 2)
@@ -174,10 +176,10 @@ def plot_training_progress(train_losses, val_metrics):
     plt.xlabel('Epoch')
     plt.ylabel('Metric Value')
     plt.title('Validation Metrics')
+    plt.legend()
 
     # Adjust layout and display plot
-    plt.tight_layout()
-    plt.savefig('plot1.png')  # Save the plot as an image file
+    plt.savefig('plot2.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 
@@ -188,8 +190,7 @@ def plot_learning_rate(lr_scheduler):
     plt.xlabel('Epoch')
     plt.ylabel('Learning Rate')
     plt.title('Learning Rate Schedule')
-    plt.grid(True)
-    plt.savefig('plot2.png')  # Save the plot as an image file
+    plt.savefig('plot3.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 from sklearn.manifold import TSNE
@@ -211,7 +212,7 @@ def plot_density_pred(all_predictions, target_y, n_clusters):
     scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=cluster_labels, cmap='tab10', s=1)
     plt.legend(*scatter.legend_elements(), title="Cluster")
     plt.title('t-SNE of Recommended Items with Clustering')
-    plt.savefig('plot3.png')  # Save the plot as an image file
+    plt.savefig('plot4.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 
@@ -233,8 +234,7 @@ def test_result(test_results):
     plt.xticks(rotation=45)
 
     # Displaying the plot
-    plt.tight_layout()
-    plt.savefig('plot4.png')  # Save the plot as an image file
+    plt.savefig('plot5.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 
@@ -274,8 +274,8 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=500, num_
             plt.xlabel('Predicted Scores')
             plt.ylabel('Frequency')
             # Displaying the plot
-            plt.tight_layout()
-            plt.savefig('plot5.png')  # Save the plot as an image file
+            plt.legend()
+            plt.savefig('plot6.png')  # Save the plot as an image file
             plt.close()  # Close the plot to release memory
 
 
