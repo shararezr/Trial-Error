@@ -261,6 +261,7 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_
                 
                 scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
                 predictions.append(rep_diffu.cpu().numpy())
+                max_length = max(len(arr) for arr in predictions)
                 # Pad shorter arrays with zeros to match the maximum length
                 padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
                 # Concatenate the padded arrays into a single array
