@@ -247,7 +247,7 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_
         predictions = {}
 
         # Randomly select three samples from the test data set
-        for test_batch in test_data_loader:
+        for test_batch in data_loader:
             for _ in range(num_iterations):
                 test_batch = [x.to(device) for x in test_batch]
                 scores_rec, rep_diffu, _, _, _, _ = model_joint(test_batch[0], test_batch[1], train_flag=False)
