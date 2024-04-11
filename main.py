@@ -277,7 +277,7 @@ def main(args):
     plot_training_progress(train_losses, val_metrics_dict_mean)
     plot_learning_rate(learning_rates)
     test_result(test_results)
-    plot_density_pred(scores_rec_diffu)
+    #plot_density_pred(scores_rec_diffu)
     num_cluster = 6
     plot_density_pred(target_pre, label_pre,num_cluster)
 
