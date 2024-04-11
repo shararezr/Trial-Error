@@ -32,7 +32,7 @@ default_params = {
     'emb_dropout': 0.3,
     'hidden_act': 'gelu',
     'num_blocks': 4,
-    'epochs': 6,
+    'epochs': 5,
     'decay_step': 100,
     'gamma': 0.1,
     'metric_ks': [5, 10, 20],
@@ -46,7 +46,7 @@ default_params = {
     'lambda_uncertainty': 0.001,
     'noise_schedule': 'trunc_lin',
     'rescale_timesteps': True,
-    'eval_interval': 2,
+    'eval_interval': 1,
     'patience': 5,
     'description': 'Diffu_norm_score',
     'long_head': False,
@@ -238,6 +238,42 @@ def test_result(test_results):
     plt.close()  # Close the plot to release memory
 
 
+def Diversity_inference(model_joint, args, data_loader, num_iterations=500, num_samples=5):
+    device = args.device
+    model_joint = model_joint.to(device)
+    with torch.no_grad():
+        predictions = {}
+
+        # Randomly select three samples from the test data set
+        test_samples = []
+        for test_batch in data_loader:
+            if len(test_samples) == num_samples:
+                break
+            test_samples.append(test_batch)
+        for sample in test_samples:
+            sample = [x.to(device) for x in sample]
+            for i in range(len(sample[1])):
+                predictions[i] = []
+                for _ in range(num_iterations):
+                    scores_rec, rep_diffu, _, _, _, _ = model_joint(sample[0], sample[1], train_flag=False)
+                    scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
+                    predictions[i].append(scores_rec_diffu.cpu().numpy())
+
+        # Plotting distributions for each user
+        for user, user_predictions in predictions.items():
+            plt.figure(figsize=(10, 6))
+            for j in range(num_iterations):
+                plt.hist(user_predictions[j], bins=20, alpha=0.5, label=f'Iteration {j+1}')
+            plt.title(f'Distribution of Predictions for User {user+1}')
+            plt.xlabel('Predicted Scores')
+            plt.ylabel('Frequency')
+            # Displaying the plot
+            plt.tight_layout()
+            plt.savefig('plot5.png')  # Save the plot as an image file
+            plt.close()  # Close the plot to release memory
+
+
+
 def main(args):
     fix_random_seed_as(args.random_seed)
     path_data = 'dataset.pkl'
@@ -280,6 +316,7 @@ def main(args):
     #plot_density_pred(scores_rec_diffu)
     num_cluster = 6
     plot_density_pred(target_pre, label_pre,num_cluster)
+    Diversity_inference(best_model, args, test_data_loader, num_iterations=500, num_samples=5)
 
     # Save the best model
     torch.save(best_model.state_dict(), 'best_model.pth')
