@@ -321,7 +321,7 @@ def main(args):
     #plot_density_pred(scores_rec_diffu)
     num_cluster = 5
     plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=5)
+    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
 
     # Save the best model
     torch.save(best_model.state_dict(), 'best_model.pth')
