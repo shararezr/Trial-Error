@@ -331,6 +331,48 @@ def diversity_inference2(model_joint, args, data_loader, num_iterations=50, num_
 
 
 
+def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_samples=2):
+    device = args.device
+    model_joint = model_joint.to(device)
+
+    # Define colors based on number of samples
+    colors = plt.cm.rainbow(np.linspace(0, 1, num_samples))
+
+    # List to store predictions
+    predictions = []
+    test_sample_l = []
+    y = []
+    for i in range(num_samples):
+      # Select a single test sample
+      test_iterator = iter(data_loader)
+      test_sample_l.append(next(test_iterator))
+
+    with torch.no_grad():
+        for i in range(num_samples):
+          test_sample = test_sample_l[i]
+          for _ in range(num_iterations):
+            # Select a single test sample
+            y.append(i)
+
+            scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
+            predictions.append(rep_diffu.cpu().numpy())
+                
+        max_length = max(len(arr) for arr in predictions)
+        # Pad shorter arrays with zeros to match the maximum length
+        padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
+        # Concatenate the padded arrays into a single array
+        target_pre_array = np.concatenate(padded_arrays)
+        # Apply t-SNE
+        tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+        X_tsne = tsne.fit_transform(target_pre_array)
+
+        plt.figure(figsize=(12, 8))
+        scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],c = y.astype(int), cmap='tab10', s=1)
+        plt.legend()
+        plt.savefig('plot8.png')  # Save the plot as an image file
+        plt.close()  # Close the plot to release memory
+
+
 def main(args):
     fix_random_seed_as(args.random_seed)
     path_data = 'dataset.pkl'
@@ -369,7 +411,7 @@ def main(args):
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference2(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
+    diversity_inference3(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
     #plot_training_progress(train_losses)
     #plot_val_progress(val_metrics_dict_mean)
     #plot_learning_rate(learning_rates)
