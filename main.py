@@ -32,7 +32,7 @@ default_params = {
     'emb_dropout': 0.3,
     'hidden_act': 'gelu',
     'num_blocks': 4,
-    'epochs': 5,
+    'epochs': 3,
     'decay_step': 100,
     'gamma': 0.1,
     'metric_ks': [5, 10, 20],
