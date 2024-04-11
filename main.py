@@ -327,7 +327,7 @@ def main(args):
     #test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
 
-'''
+    '''
     # Save the best model
     torch.save(best_model.state_dict(), 'best_model.pth')
     
@@ -347,7 +347,7 @@ def main(args):
     
     # Save the learning rates
     np.save('learning_rates.npy', learning_rates)
-'''
+    '''
 
     if args.long_head:
         cold_hot_dict, len_seq_dict, split_hotcold, split_length, list_len, list_num = cold_hot_long_short(data_raw, args.dataset)
