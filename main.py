@@ -260,7 +260,7 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_
                 predictions[cnt].append(scores_rec_diffu.cpu().numpy())
 
 
-            if cnt > num_samples:
+            if cnt >= num_samples:
                 Break
             cnt = cnt+1
         
