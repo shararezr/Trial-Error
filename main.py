@@ -368,7 +368,7 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_
         X_tsne = tsne.fit_transform(target_pre_array)
 
         plt.figure(figsize=(12, 8))
-        scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],c = y, cmap='tab10', s=1)
+        plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y, cmap='tab10', s=1)
         plt.legend()
         plt.savefig('plot8.png')  # Save the plot as an image file
         plt.close()  # Close the plot to release memory
