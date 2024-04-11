@@ -244,7 +244,8 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_
     model_joint = model_joint.to(device)
     cnt=0
     with torch.no_grad():
-        predictions = {}
+        for i in range (len(num_samples)):
+            predictions[i] = []
 
         # Randomly select three samples from the test data set
         for test_batch in data_loader:
