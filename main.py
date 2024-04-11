@@ -272,9 +272,9 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_
                 # Apply t-SNE
                 tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
                 X_tsne = tsne.fit_transform(target_pre_array)
-                # Plot the result
-                plt.figure(figsize=(12, 8))
-                scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],cmap='tab10', s=1)
+            # Plot the result
+            plt.figure(figsize=(12, 8))
+            scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],cmap='tab10', s=1)
             plt.legend(*scatter.legend_elements(), title="Item Representation")
             plt.title('t-SNE of Recommended Items')
             plt.legend()
