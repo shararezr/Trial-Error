@@ -238,37 +238,30 @@ def test_result(test_results):
     plt.close()  # Close the plot to release memory
 
 
-def diversity_inference(model_joint, args, data_loader, num_iterations=500, num_samples=5):
+def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_samples=5):
     is_parallel = args.num_gpu > 1
     device = args.device
     model_joint = model_joint.to(device)
+    cnt=0
     with torch.no_grad():
         predictions = {}
 
         # Randomly select three samples from the test data set
-        test_samples = []
-        for test_batch in data_loader:
-            if len(test_samples) == num_samples:
-                    break
-            for x in test_batch:
-                if len(test_samples) == num_samples:
-                    break
-                test_samples.append(x.to(device))
-           
-        
-           
-        for i in range(len(test_samples)):
-            predictions[i] = []
-            sample = test_samples[i]
+        for test_batch in test_data_loader:
             for _ in range(num_iterations):
-                scores_rec, rep_diffu, _, _, _, _ = model_joint(sample[0], sample[1], train_flag=False)
+                test_batch = [x.to(device) for x in test_batch]
+                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_batch[0], test_batch[1], train_flag=False)
                 if is_parallel:
                     scores_rec_diffu = model_joint.module.diffu_rep_pre(rep_diffu)    ### inner_production
                 if is_parallel==False:
                     scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
+                predictions[cnt].append(scores_rec_diffu.cpu().numpy())
 
 
-                predictions[i].append(scores_rec_diffu.cpu().numpy())
+            if cnt > num_samples:
+                Break
+            cnt++
+        
 
         # Plotting distributions for each user
         for user, user_predictions in predictions.items():
@@ -325,9 +318,9 @@ def main(args):
     plot_learning_rate(learning_rates)
     test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
-    num_cluster = 6
+    num_cluster = 5
     plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference(best_model, args, test_data_loader, num_iterations=500, num_samples=5)
+    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=5)
 
     # Save the best model
     torch.save(best_model.state_dict(), 'best_model.pth')
