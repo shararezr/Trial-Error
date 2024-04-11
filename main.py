@@ -152,8 +152,8 @@ def cold_hot_long_short(data_raw, dataset_name):
 
 
 
-def plot_val_progress(val_metrics_dict_mean):
-    plt.figure(figsize=(12, 6))
+def plot_training_progress(train_losses):
+    plt.figure(figsize=(10, 6))
     # Define marker styles for each metric
     marker_styles = ['o', 's', '^', 'D', 'x', 'v']
 
@@ -166,8 +166,9 @@ def plot_val_progress(val_metrics_dict_mean):
     plt.savefig('plot1.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
     
-def plot_training_progress(train_losses):
+def plot_val_progress(val_metrics):
     # Plot validation metrics
+    plt.figure(figsize=(10, 6))
     metrics = list(val_metrics.keys())
     scores = list(val_metrics.values())
     for i in range(0,len(metrics)):
