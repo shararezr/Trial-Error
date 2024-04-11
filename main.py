@@ -317,7 +317,7 @@ def main(args):
     best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates = model_train(tra_data_loader, val_data_loader, test_data_loader, rec_diffu_joint_model, args, logger)
 
     num_cluster = 5
-    plot_density_pred(target_pre, label_pre,num_cluster)
+    #plot_density_pred(target_pre, label_pre,num_cluster)
     diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
     plot_training_progress(train_losses)
     plot_val_progress(val_metrics_dict_mean)
