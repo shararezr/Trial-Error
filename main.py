@@ -249,21 +249,26 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=500, num_
         test_samples = []
         for test_batch in data_loader:
             if len(test_samples) == num_samples:
-                break
-            test_samples.append(test_batch)
-        for sample in test_samples:
-            sample = [x.to(device) for x in sample]
-            for i in range(len(sample[1])):
-                predictions[i] = []
-                for _ in range(num_iterations):
-                    scores_rec, rep_diffu, _, _, _, _ = model_joint(sample[0], sample[1], train_flag=False)
-                    if is_parallel:
-                      scores_rec_diffu = model_joint.module.diffu_rep_pre(rep_diffu)    ### inner_production
-                    if is_parallel==False:
-                      scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
+                    break
+            for x in test_batch:
+                if len(test_samples) == num_samples:
+                    break
+                test_samples.append(x.to(device))
+           
+        
+           
+        for i in range(len(test_samples)):
+            predictions[i] = []
+            sample = test_samples[i]
+            for _ in range(num_iterations):
+                scores_rec, rep_diffu, _, _, _, _ = model_joint(sample[0], sample[1], train_flag=False)
+                if is_parallel:
+                    scores_rec_diffu = model_joint.module.diffu_rep_pre(rep_diffu)    ### inner_production
+                if is_parallel==False:
+                    scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
 
 
-                    predictions[i].append(scores_rec_diffu.cpu().numpy())
+                predictions[i].append(scores_rec_diffu.cpu().numpy())
 
         # Plotting distributions for each user
         for user, user_predictions in predictions.items():
