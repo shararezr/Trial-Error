@@ -238,7 +238,7 @@ def test_result(test_results):
     plt.close()  # Close the plot to release memory
 
 from sklearn.manifold import TSNE
-def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_samples=5):
+def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_samples=2):
     is_parallel = args.num_gpu > 1
     device = args.device
     model_joint = model_joint.to(device)
@@ -321,7 +321,7 @@ def main(args):
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
+    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=1)
     #plot_training_progress(train_losses)
     #plot_val_progress(val_metrics_dict_mean)
     #plot_learning_rate(learning_rates)
