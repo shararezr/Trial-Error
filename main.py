@@ -238,7 +238,7 @@ def test_result(test_results):
     plt.close()  # Close the plot to release memory
 
 from sklearn.manifold import TSNE
-def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_samples=2):
+def diversity_inference(model_joint, args, data_loader, num_iterations=50, num_samples=2):
     is_parallel = args.num_gpu > 1
     device = args.device
     model_joint = model_joint.to(device)
@@ -261,17 +261,17 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_
                 
                 scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
                 predictions.append(rep_diffu.cpu().numpy())
-                max_length = max(len(arr) for arr in predictions)
-                # Pad shorter arrays with zeros to match the maximum length
-                padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
-                # Concatenate the padded arrays into a single array
-                target_pre_array = np.concatenate(padded_arrays)
+            max_length = max(len(arr) for arr in predictions)
+            # Pad shorter arrays with zeros to match the maximum length
+            padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
+            # Concatenate the padded arrays into a single array
+            target_pre_array = np.concatenate(padded_arrays)
         
-                # Plotting distributions for each user
+            # Plotting distributions for each user
         
-                # Apply t-SNE
-                tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
-                X_tsne = tsne.fit_transform(target_pre_array)
+            # Apply t-SNE
+            tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+            X_tsne = tsne.fit_transform(target_pre_array)
             # Plot the result
             plt.figure(figsize=(12, 8))
             scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],cmap='tab10', s=1)
@@ -321,7 +321,7 @@ def main(args):
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=1)
+    diversity_inference(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
     #plot_training_progress(train_losses)
     #plot_val_progress(val_metrics_dict_mean)
     #plot_learning_rate(learning_rates)
