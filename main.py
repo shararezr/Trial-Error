@@ -269,6 +269,10 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=50, num_s
             padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
             # Concatenate the padded arrays into a single array
             target_pre_array = np.concatenate(padded_arrays)
+
+            # Apply t-SNE
+            tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+            X_tsne = tsne.fit_transform(target_pre_array)
         
             # Plotting distributions for each user
             # Plot the result with colors based on number of samples
