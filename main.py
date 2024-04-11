@@ -238,7 +238,7 @@ def test_result(test_results):
     plt.close()  # Close the plot to release memory
 
 
-def Diversity_inference(model_joint, args, data_loader, num_iterations=500, num_samples=5):
+def diversity_inference(model_joint, args, data_loader, num_iterations=500, num_samples=5):
     device = args.device
     model_joint = model_joint.to(device)
     with torch.no_grad():
@@ -316,7 +316,7 @@ def main(args):
     #plot_density_pred(scores_rec_diffu)
     num_cluster = 6
     plot_density_pred(target_pre, label_pre,num_cluster)
-    Diversity_inference(best_model, args, test_data_loader, num_iterations=500, num_samples=5)
+    diversity_inference(best_model, args, test_data_loader, num_iterations=500, num_samples=5)
 
     # Save the best model
     torch.save(best_model.state_dict(), 'best_model.pth')
