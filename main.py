@@ -152,13 +152,12 @@ def cold_hot_long_short(data_raw, dataset_name):
 
 
 
-def plot_training_progress(train_losses, val_metrics):
+def plot_val_progress(val_metrics_dict_mean):
     plt.figure(figsize=(12, 6))
     # Define marker styles for each metric
     marker_styles = ['o', 's', '^', 'D', 'x', 'v']
 
     # Plot training loss
-    plt.subplot(1, 2, 1)
     plt.plot(range(1, len(train_losses) + 1), train_losses, label='Training Loss', color='blue')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
@@ -166,9 +165,9 @@ def plot_training_progress(train_losses, val_metrics):
     plt.legend()
     plt.savefig('plot1.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
-
+    
+def plot_training_progress(train_losses):
     # Plot validation metrics
-    plt.subplot(1, 2, 2)
     metrics = list(val_metrics.keys())
     scores = list(val_metrics.values())
     for i in range(0,len(metrics)):
@@ -314,7 +313,8 @@ def main(args):
 
     best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates = model_train(tra_data_loader, val_data_loader, test_data_loader, rec_diffu_joint_model, args, logger)
 
-    plot_training_progress(train_losses, val_metrics_dict_mean)
+    plot_training_progress(train_losses)
+    plot_val_progress(val_metrics_dict_mean)
     plot_learning_rate(learning_rates)
     test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
