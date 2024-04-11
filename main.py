@@ -174,12 +174,10 @@ def plot_training_progress(train_losses, val_metrics):
     plt.xlabel('Epoch')
     plt.ylabel('Metric Value')
     plt.title('Validation Metrics')
-    plt.savefig('plot.png')  # Save the plot as an image file
-    plt.close()  # Close the plot to release memory
 
     # Adjust layout and display plot
     plt.tight_layout()
-    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.savefig('plot1.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 
@@ -191,7 +189,7 @@ def plot_learning_rate(lr_scheduler):
     plt.ylabel('Learning Rate')
     plt.title('Learning Rate Schedule')
     plt.grid(True)
-    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.savefig('plot2.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 from sklearn.manifold import TSNE
@@ -213,7 +211,7 @@ def plot_density_pred(all_predictions, target_y, n_clusters):
     scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=cluster_labels, cmap='tab10', s=1)
     plt.legend(*scatter.legend_elements(), title="Cluster")
     plt.title('t-SNE of Recommended Items with Clustering')
-    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.savefig('plot3.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 
@@ -236,7 +234,7 @@ def test_result(test_results):
 
     # Displaying the plot
     plt.tight_layout()
-    plt.savefig('plot.png')  # Save the plot as an image file
+    plt.savefig('plot4.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
 
