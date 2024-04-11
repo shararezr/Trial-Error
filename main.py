@@ -358,7 +358,7 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_
             predictions.append(rep_diffu.cpu().numpy())
                 
         max_length = max(len(arr) for arr in predictions)
-        y = np.array(y)
+        
         # Pad shorter arrays with zeros to match the maximum length
         padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
         # Concatenate the padded arrays into a single array
@@ -368,7 +368,7 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_
         X_tsne = tsne.fit_transform(target_pre_array)
 
         plt.figure(figsize=(12, 8))
-        scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],c = y.astype(int), cmap='tab10', s=1)
+        scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],c = y, cmap='tab10', s=1)
         plt.legend()
         plt.savefig('plot8.png')  # Save the plot as an image file
         plt.close()  # Close the plot to release memory
