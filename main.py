@@ -259,7 +259,7 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_
 
             if cnt > num_samples:
                 Break
-            cnt++
+            cnt = cnt+1
         
 
         # Plotting distributions for each user
