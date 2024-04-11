@@ -278,7 +278,6 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=50, num_s
             # Plot the result with colors based on number of samples
             plt.figure(figsize=(12, 8))
             plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=colors[i], label=f'Sample {i+1}', s=1)
-            plt.legend(*scatter.legend_elements(), title="Item Representation")
         plt.title('t-SNE of Recommended Items')
         plt.legend()
         # Adjust layout and display plot
