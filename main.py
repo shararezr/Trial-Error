@@ -32,7 +32,7 @@ default_params = {
     'emb_dropout': 0.3,
     'hidden_act': 'gelu',
     'num_blocks': 4,
-    'epochs': 100,
+    'epochs': 5,
     'decay_step': 100,
     'gamma': 0.1,
     'metric_ks': [5, 10, 20],
@@ -46,7 +46,7 @@ default_params = {
     'lambda_uncertainty': 0.001,
     'noise_schedule': 'trunc_lin',
     'rescale_timesteps': True,
-    'eval_interval': 10,
+    'eval_interval': 1,
     'patience': 5,
     'description': 'Diffu_norm_score',
     'long_head': False,
@@ -237,47 +237,49 @@ def test_result(test_results):
     plt.savefig('plot5.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
 
-
+from sklearn.manifold import TSNE
 def diversity_inference(model_joint, args, data_loader, num_iterations=100, num_samples=5):
     is_parallel = args.num_gpu > 1
-    predictions = {}
     device = args.device
     model_joint = model_joint.to(device)
-    cnt=0
+
+    # Assuming 'model' is your trained model and 'test_data_loader' is your test data loader
+    
+    # Number of iterations
+    num_iterations = 50
+
     with torch.no_grad():
         for i in range (num_samples):
-            predictions[i] = []
-
-        # Randomly select three samples from the test data set
-        for test_batch in data_loader:
+            # List to store predictions
+            predictions = []
+    
+            # Select a single test sample
+            test_iterator = iter(data_loader)
+            test_sample = next(test_iterator)  # Assuming your test data loader returns (input, target) tuples
+    
             for _ in range(num_iterations):
-                test_batch = [x.to(device) for x in test_batch]
-                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_batch[0], test_batch[1], train_flag=False)
-                if is_parallel:
-                    scores_rec_diffu = model_joint.module.diffu_rep_pre(rep_diffu)    ### inner_production
-                if is_parallel==False:
-                    scores_rec_diffu = model_joint.diffu_rep_pre(rep_diffu)
-                predictions[cnt].append(scores_rec_diffu.cpu().numpy())
-
-
-            if cnt >= num_samples:
-                Break
-            cnt = cnt+1
+                
+                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
+                predictions.append(rep_diffu.cpu().numpy())
+                # Pad shorter arrays with zeros to match the maximum length
+                padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
+                # Concatenate the padded arrays into a single array
+                target_pre_array = np.concatenate(padded_arrays)
         
-
-        # Plotting distributions for each user
-        for user, user_predictions in predictions.items():
-            plt.figure(figsize=(10, 6))
-            for j in range(num_iterations):
-                plt.hist(user_predictions[j], bins=20, alpha=0.5, label=f'Iteration {j+1}')
-            plt.title(f'Distribution of Predictions for User {user+1}')
-            plt.xlabel('Predicted Scores')
-            plt.ylabel('Frequency')
-            # Displaying the plot
+                # Plotting distributions for each user
+        
+                # Apply t-SNE
+                tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+                X_tsne = tsne.fit_transform(target_pre_array)
+                # Plot the result
+                plt.figure(figsize=(12, 8))
+                scatter = plt.scatter(X_tsne[:, 0], X_tsne[:, 1],cmap='tab10', s=1)
+            plt.legend(*scatter.legend_elements(), title="Item Representation")
+            plt.title('t-SNE of Recommended Items')
             plt.legend()
-            plt.savefig('plot6.png')  # Save the plot as an image file
-            plt.close()  # Close the plot to release memory
-
+            # Adjust layout and display plot
+            plt.savefig('plot4.png')  # Save the plot as an image file
+            plt.close()  # Close the plot to release memory   
 
 
 def main(args):
@@ -318,11 +320,11 @@ def main(args):
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
-    #diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
-    plot_training_progress(train_losses)
-    plot_val_progress(val_metrics_dict_mean)
-    plot_learning_rate(learning_rates)
-    test_result(test_results)
+    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
+    #plot_training_progress(train_losses)
+    #plot_val_progress(val_metrics_dict_mean)
+    #plot_learning_rate(learning_rates)
+    #test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
 
 
