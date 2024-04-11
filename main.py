@@ -155,7 +155,6 @@ def cold_hot_long_short(data_raw, dataset_name):
 def plot_training_progress(train_losses):
     plt.figure(figsize=(10, 6))
     # Define marker styles for each metric
-    marker_styles = ['o', 's', '^', 'D', 'x', 'v']
 
     # Plot training loss
     plt.plot(range(1, len(train_losses) + 1), train_losses, label='Training Loss', color='blue')
@@ -168,6 +167,7 @@ def plot_training_progress(train_losses):
     
 def plot_val_progress(val_metrics):
     # Plot validation metrics
+    marker_styles = ['o', 's', '^', 'D', 'x', 'v']
     plt.figure(figsize=(10, 6))
     metrics = list(val_metrics.keys())
     scores = list(val_metrics.values())
@@ -314,14 +314,15 @@ def main(args):
 
     best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates = model_train(tra_data_loader, val_data_loader, test_data_loader, rec_diffu_joint_model, args, logger)
 
+    num_cluster = 5
+    plot_density_pred(target_pre, label_pre,num_cluster)
+    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
     plot_training_progress(train_losses)
     plot_val_progress(val_metrics_dict_mean)
     plot_learning_rate(learning_rates)
     test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
-    num_cluster = 5
-    plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
+
 
     # Save the best model
     torch.save(best_model.state_dict(), 'best_model.pth')
