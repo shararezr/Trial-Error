@@ -239,7 +239,7 @@ def test_result(test_results):
     plt.close()  # Close the plot to release memory
 
 from sklearn.manifold import TSNE
-def diversity_inference(model_joint, args, data_loader, num_iterations=50, num_samples=2):
+def diversity_inference1(model_joint, args, data_loader, num_iterations=50, num_samples=2):
     is_parallel = args.num_gpu > 1
     device = args.device
     model_joint = model_joint.to(device)
@@ -282,7 +282,53 @@ def diversity_inference(model_joint, args, data_loader, num_iterations=50, num_s
         plt.legend()
         # Adjust layout and display plot
         plt.savefig('plot4.png')  # Save the plot as an image file
-        plt.close()  # Close the plot to release memory   
+        plt.close()  # Close the plot to release memory
+
+from sklearn.decomposition import PCA
+def diversity_inference2(model_joint, args, data_loader, num_iterations=50, num_samples=2):
+    device = args.device
+    model_joint = model_joint.to(device)
+
+    # Define colors based on number of samples
+    colors = plt.cm.rainbow(np.linspace(0, 1, num_samples))
+
+    # List to store predictions
+    predictions = []
+    test_sample_l = []
+    for i in range(num_samples):
+      # Select a single test sample
+      test_iterator = iter(data_loader)
+      test_sample_l.append(next(test_iterator))
+
+    with torch.no_grad():
+        for _ in range(num_iterations):
+            for i in range(num_samples):
+                # Select a single test sample
+                test_sample = test_sample_l[i]
+
+
+                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
+                predictions.append(rep_diffu.cpu().numpy())
+                
+        max_length = max(len(arr) for arr in predictions)
+        # Pad shorter arrays with zeros to match the maximum length
+        padded_arrays = [np.pad(arr, ((0, max_length - len(arr)), (0, 0)), mode='constant') for arr in predictions]
+        # Concatenate the padded arrays into a single array
+        target_pre_array = np.concatenate(padded_arrays)
+
+        # Apply PCA
+        pca = PCA(n_components=2)
+        X_pca = pca.fit_transform(target_pre_array)
+
+        # Plot all samples on the same plot
+        plt.figure(figsize=(12, 8))
+        for i in range(num_samples):
+            plt.scatter(X_pca[i::num_samples, 0], X_pca[i::num_samples, 1], c=colors[i], label=f'Sample {i+1}', s=1)
+        plt.title('PCA of Recommended Items')
+        plt.legend()
+        plt.savefig('plot8.png')  # Save the plot as an image file
+        plt.close()  # Close the plot to release memory
+
 
 
 def main(args):
@@ -323,7 +369,7 @@ def main(args):
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
+    diversity_inference2(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
     #plot_training_progress(train_losses)
     #plot_val_progress(val_metrics_dict_mean)
     #plot_learning_rate(learning_rates)
