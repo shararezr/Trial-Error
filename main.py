@@ -33,7 +33,7 @@ default_params = {
     'emb_dropout': 0.3,
     'hidden_act': 'gelu',
     'num_blocks': 4,
-    'epochs': 3,
+    'epochs': 20,
     'decay_step': 100,
     'gamma': 0.1,
     'metric_ks': [5, 10, 20],
@@ -47,7 +47,7 @@ default_params = {
     'lambda_uncertainty': 0.001,
     'noise_schedule': 'trunc_lin',
     'rescale_timesteps': True,
-    'eval_interval': 1,
+    'eval_interval': 4,
     'patience': 5,
     'description': 'Diffu_norm_score',
     'long_head': False,
@@ -425,7 +425,7 @@ def main(args):
     tra_data_loader = tra_data.get_pytorch_dataloaders()
     val_data_loader = val_data.get_pytorch_dataloaders()
     test_data_loader = test_data.get_pytorch_dataloaders()
-    diversity_inference3(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
+    diversity_inference3(best_model, args, test_data_loader, num_iterations=100, num_samples=2)
 
     '''
     # Save the best model
