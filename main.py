@@ -343,17 +343,15 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_
     y = np.zeros(num_iterations * num_samples)
 
 
-    test_iterator = iter(data_loader)
-    test_sample = next(test_iterator)
-
     with torch.no_grad():
         for i in range(num_samples):
-            random_index = random.randint(1, 512)
+            test_iterator = iter(data_loader)
+            test_sample = next(test_iterator)
             for j in range(num_iterations):
                 # Append the current sample index to the y array
                 y[i * num_iterations + j] = i
 
-                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0][random_index].to(device), test_sample[1][random_index].to(device), train_flag=False)
+                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
                 predictions.append(rep_diffu.cpu().numpy())
                 
         max_length = max(len(arr) for arr in predictions)
@@ -412,12 +410,22 @@ def main(args):
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
-    diversity_inference3(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
     #plot_training_progress(train_losses)
     #plot_val_progress(val_metrics_dict_mean)
     #plot_learning_rate(learning_rates)
     #test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
+
+
+    args.batch_size = 1
+    args = item_num_create(args, len(data_raw['smap']))
+    tra_data = Data_Train(data_raw['train'], args)
+    val_data = Data_Val(data_raw['train'], data_raw['val'], args)
+    test_data = Data_Test(data_raw['train'], data_raw['val'], data_raw['test'], args)
+    tra_data_loader = tra_data.get_pytorch_dataloaders()
+    val_data_loader = val_data.get_pytorch_dataloaders()
+    test_data_loader = test_data.get_pytorch_dataloaders()
+    diversity_inference3(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
 
     '''
     # Save the best model
