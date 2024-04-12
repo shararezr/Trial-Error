@@ -330,6 +330,7 @@ def diversity_inference2(model_joint, args, data_loader, num_iterations=50, num_
         plt.close()  # Close the plot to release memory
 
 
+import random
 
 def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_samples=2):
     device = args.device
@@ -337,24 +338,22 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=50, num_
 
     # List to store predictions
     predictions = []
-    test_sample_l = []
 
     # Create an array to store y values
     y = np.zeros(num_iterations * num_samples)
 
-    for i in range(num_samples):
-        # Select a single test sample
-        test_iterator = iter(data_loader)
-        test_sample_l.append(next(test_iterator))
+
+    test_iterator = iter(data_loader)
+    test_sample = next(test_iterator)
 
     with torch.no_grad():
         for i in range(num_samples):
-            test_sample = test_sample_l[i]
+            random_index = random.randint(1, 512)
             for j in range(num_iterations):
                 # Append the current sample index to the y array
                 y[i * num_iterations + j] = i
 
-                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0].to(device), test_sample[1].to(device), train_flag=False)
+                scores_rec, rep_diffu, _, _, _, _ = model_joint(test_sample[0][random_index].to(device), test_sample[1][random_index].to(device), train_flag=False)
                 predictions.append(rep_diffu.cpu().numpy())
                 
         max_length = max(len(arr) for arr in predictions)
