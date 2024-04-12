@@ -425,7 +425,7 @@ def main(args):
     tra_data_loader = tra_data.get_pytorch_dataloaders()
     val_data_loader = val_data.get_pytorch_dataloaders()
     test_data_loader = test_data.get_pytorch_dataloaders()
-    diversity_inference3(best_model, args, test_data_loader, num_iterations=50, num_samples=1)
+    diversity_inference3(best_model, args, test_data_loader, num_iterations=100, num_samples=3)
 
     '''
     # Save the best model
