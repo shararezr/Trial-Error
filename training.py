@@ -95,7 +95,7 @@ def model_train(tra_data_loader, val_data_loader, test_data_loader, model_joint,
     if is_parallel:
         model_joint = nn.DataParallel(model_joint)
     optimizer = optimizers(model_joint, args)
-    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.decay_step, gamma=args.gamma)
+    lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer)
     best_metrics_dict = {'Best_HR@5': 0, 'Best_NDCG@5': 0, 'Best_HR@10': 0, 'Best_NDCG@10': 0, 'Best_HR@20': 0, 'Best_NDCG@20': 0}
     best_epoch = {'Best_epoch_HR@5': 0, 'Best_epoch_NDCG@5': 0, 'Best_epoch_HR@10': 0, 'Best_epoch_NDCG@10': 0, 'Best_epoch_HR@20': 0, 'Best_epoch_NDCG@20': 0}
     bad_count = 0
