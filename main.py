@@ -16,8 +16,7 @@ from model import create_model_diffu, Att_Diffuse_model
 from training import model_train, LSHT_inference
 from collections import Counter
 import matplotlib.cm as cm
-
-
+import time
 
 # Define default parameters in a dictionary
 default_params = {
@@ -401,12 +400,15 @@ def main(args):
     num_unique_items = len(set(target_item))
 
 
-
+    # Start measuring time
+    start_time = time.time()
     diffu_rec = create_model_diffu(args)
     rec_diffu_joint_model = Att_Diffuse_model(diffu_rec, args)
 
 
     best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates = model_train(tra_data_loader, val_data_loader, test_data_loader, rec_diffu_joint_model, args, logger)
+    # Start measuring time
+    end_time = time.time()
 
     num_cluster = 5
     #plot_density_pred(target_pre, label_pre,num_cluster)
@@ -416,6 +418,9 @@ def main(args):
     #test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
 
+    # Calculate the elapsed time
+    elapsed_time = end_time - start_time
+    print("Elapsed time:", elapsed_time, "seconds")
 
     args.batch_size = 1
     args = item_num_create(args, len(data_raw['smap']))
