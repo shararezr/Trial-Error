@@ -411,11 +411,11 @@ def main(args):
     end_time = time.time()
 
     num_cluster = 5
-    #plot_density_pred(target_pre, label_pre,num_cluster)
-    #plot_training_progress(train_losses)
-    #plot_val_progress(val_metrics_dict_mean)
-    #plot_learning_rate(learning_rates)
-    #test_result(test_results)
+    plot_density_pred(target_pre, label_pre,num_cluster)
+    plot_training_progress(train_losses)
+    plot_val_progress(val_metrics_dict_mean)
+    plot_learning_rate(learning_rates)
+    test_result(test_results)
     #plot_density_pred(scores_rec_diffu)
 
     # Calculate the elapsed time
