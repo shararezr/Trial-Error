@@ -46,7 +46,7 @@ default_params = {
     'lambda_uncertainty': 0.001,
     'noise_schedule': 'trunc_lin',
     'rescale_timesteps': True,
-    'eval_interval': 10,
+    'eval_interval': 5,
     'patience': 5,
     'description': 'Diffu_norm_score',
     'long_head': False,
