@@ -419,12 +419,13 @@ def main(args):
     plot_training_progress(train_losses)
     plot_val_progress(val_metrics_dict_mean)
     plot_learning_rate(learning_rates)
-    test_result(test_results)
+    
     #plot_density_pred(scores_rec_diffu)
 
     # Calculate the elapsed time
     elapsed_time = end_time - start_time
     print("Elapsed time:", elapsed_time, "seconds")
+
 
     args.batch_size = 1
     args = item_num_create(args, len(data_raw['smap']))
@@ -435,6 +436,7 @@ def main(args):
     val_data_loader = val_data.get_pytorch_dataloaders()
     test_data_loader = test_data.get_pytorch_dataloaders()
     diversity_inference3(best_model, args, test_data_loader, num_iterations=100, num_samples=2)
+    test_result(test_results)
 
     '''
     # Save the best model
