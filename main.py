@@ -233,6 +233,10 @@ def test_result(test_results):
     # Rotating x-axis labels for better readability
     plt.xticks(rotation=45)
 
+    # Adding exact values above each bar
+    for bar, score in zip(bars, scores):
+        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.01, f'{score:.2f}', ha='center', va='bottom')
+
     # Displaying the plot
     plt.savefig('plot5.png')  # Save the plot as an image file
     plt.close()  # Close the plot to release memory
@@ -331,7 +335,7 @@ def diversity_inference2(model_joint, args, data_loader, num_iterations=50, num_
 
 import random
 
-def diversity_inference3(model_joint, args, data_loader, num_iterations=100, num_samples=2):
+def diversity_inference3(model_joint, args, data_loader, all_predictions, num_iterations=100, num_samples=2):
     device = args.device
     model_joint = model_joint.to(device)
 
