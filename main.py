@@ -377,7 +377,7 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=100, num
 
 def main(args):
     fix_random_seed_as(args.random_seed)
-    path_data = 'dataset (1).pkl'
+    path_data = 'dataset.pkl'
     with open(path_data, 'rb') as f:
         data_raw = pickle.load(f)
 
