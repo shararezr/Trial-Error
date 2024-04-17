@@ -32,7 +32,7 @@ default_params = {
     'emb_dropout': 0.3,
     'hidden_act': 'gelu',
     'num_blocks': 4,
-    'epochs': 150,
+    'epochs': 200,
     'decay_step':301,
     'gamma': 0.1,
     'metric_ks': [5, 10, 20],
@@ -335,7 +335,7 @@ def diversity_inference2(model_joint, args, data_loader, num_iterations=50, num_
 
 import random
 
-def diversity_inference3(model_joint, args, data_loader, all_predictions, num_iterations=100, num_samples=2):
+def diversity_inference3(model_joint, args, data_loader, num_iterations=100, num_samples=2):
     device = args.device
     model_joint = model_joint.to(device)
 
