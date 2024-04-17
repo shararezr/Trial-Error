@@ -223,7 +223,7 @@ def test_result(test_results):
 
     # Creating the bar plot
     plt.figure(figsize=(10, 6))
-    plt.bar(metrics, scores, color='skyblue')
+    bars = plt.bar(metrics, scores, color='skyblue')
 
     # Adding title and labels
     plt.title('Test Results')
