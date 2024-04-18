@@ -376,6 +376,9 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=100, num
 
 
 def main(args):
+
+    # Release all unused cached memory
+    torch.cuda.empty_cache()
     fix_random_seed_as(args.random_seed)
     path_data = 'dataset.pkl'
     with open(path_data, 'rb') as f:
