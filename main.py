@@ -376,9 +376,7 @@ def diversity_inference3(model_joint, args, data_loader, num_iterations=100, num
 
 
 def main(args):
-
-    # Release all unused cached memory
-    torch.cuda.empty_cache()
+    
     fix_random_seed_as(args.random_seed)
     path_data = 'dataset.pkl'
     with open(path_data, 'rb') as f:
@@ -440,6 +438,9 @@ def main(args):
     test_data_loader = test_data.get_pytorch_dataloaders()
     diversity_inference3(best_model, args, test_data_loader, num_iterations=100, num_samples=2)
     test_result(test_results)
+
+    # Release all unused cached memory
+    torch.cuda.empty_cache()
 
     '''
     # Save the best model
