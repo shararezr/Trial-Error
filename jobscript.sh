@@ -11,6 +11,7 @@
 ### -- specify that the cores must be on the same host -- 
 #BSUB -R "span[hosts=1]"
 ### -- specify that we need 4GB of memory per core/slot -- 
+#BSUB -R "rusage[mem=8GB]"
 #BSUB -R "select[gpu32gb]"
 ### -- specify that we want the job to get killed if it exceeds 5 GB per core/slot -- 
 ### -- set walltime limit: hh:mm -- 
