@@ -25,7 +25,7 @@ default_params = {
     'random_seed': 2000,
     'max_len': 100,
     'device': 'cuda',
-    'num_gpu': 2,
+    'num_gpu': 1,
     'batch_size': 512,
     'hidden_size': 128,
     'dropout': 0.1,
