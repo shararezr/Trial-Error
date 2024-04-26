@@ -31,6 +31,9 @@
 
 nvidia-smi
 # Load the cuda module
+module load pandas/2.1.3-python-3.11.7/
+module load matplotlib
+module load numpy
 module load cuda/11.6
 
 /appl/cuda/11.6.0/samples/bin/x86_64/linux/release/deviceQuery
