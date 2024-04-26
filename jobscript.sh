@@ -5,7 +5,7 @@
 ### -- set the job Name -- 
 #BSUB -J testDiffuRec
 ### -- ask for number of cores (default: 1) -- 
-#BSUB -n 4
+#BSUB -n 1
 ### -- Select the resources: 1 gpu in exclusive process mode --
 #BSUB -gpu "num=1"
 ### -- specify that the cores must be on the same host -- 
@@ -34,5 +34,7 @@ nvidia-smi
 module load cuda/11.6
 
 /appl/cuda/11.6.0/samples/bin/x86_64/linux/release/deviceQuery
-python3 main.py 
+python3 main.py
+
+python3 -u main.py
 
