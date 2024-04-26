@@ -5,7 +5,7 @@
 ### -- set the job Name -- 
 #BSUB -J testDiffuRec
 ### -- ask for number of cores (default: 1) -- 
-#BSUB -n 1
+#BSUB -n 4
 ### -- Select the resources: 1 gpu in exclusive process mode --
 #BSUB -gpu "num=1"
 ### -- specify that the cores must be on the same host -- 
