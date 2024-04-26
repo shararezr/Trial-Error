@@ -1,15 +1,15 @@
 #!/bin/sh 
 ### General options 
 ### -- specify queue -- 
-#BSUB -q hpc
+#BSUB -q gpuv100
 ### -- set the job Name -- 
 #BSUB -J testDiffuRec
 ### -- ask for number of cores (default: 1) -- 
 #BSUB -n 8
 ### -- Select the resources: 1 gpu in exclusive process mode --
-#BSUB -gpu "num=2:mode=exclusive_process"
+#BSUB -gpu "num=2"
 ### -- specify that the cores must be on the same host -- 
-#BSUB -R "span[hosts=1]"
+#BSUB -R "span[hosts=8]"
 ### -- specify that we need 4GB of memory per core/slot -- 
 #BSUB -R "rusage[mem=8GB]"
 #BSUB -R "select[gpu32gb]"
