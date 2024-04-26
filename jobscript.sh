@@ -31,7 +31,7 @@
 
 nvidia-smi
 # Load the cuda module
-module load pandas/2.1.3-python-3.11.7/
+module load pandas
 module load matplotlib
 module load numpy
 module load cuda/11.6
