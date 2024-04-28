@@ -42,6 +42,5 @@ python3 main.py
 
 python3 -u main.py
 
-python3 main.py > joboutput_$LSB_JOBID.out 2>&1
 
 
