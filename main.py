@@ -380,7 +380,7 @@ def main(args):
     torch.cuda.empty_cache()
     
     fix_random_seed_as(args.random_seed)
-    path_data = 'dataset (1).pkl'
+    path_data = 'dataset.pkl'
     with open(path_data, 'rb') as f:
         data_raw = pickle.load(f)
 
