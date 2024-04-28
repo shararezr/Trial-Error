@@ -23,7 +23,7 @@ default_params = {
     'dataset': 'ml-1m',
     'log_file': 'log/',
     'random_seed': 1947,
-    'max_len': 50,
+    'max_len': 100,
     'device': 'cuda',
     'num_gpu': 2,
     'batch_size': 512,
