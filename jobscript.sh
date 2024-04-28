@@ -36,9 +36,14 @@ module load pandas
 module load matplotlib
 module load numpy
 module load cuda/11.6
-source foobar/bin/activate
+
+nvidia-smi
+# Load the cuda module
+module load cuda/11.6
+
 /appl/cuda/11.6.0/samples/bin/x86_64/linux/release/deviceQuery
-python3 main.py
+python3 main.py 
+
 
 python3 -u main.py
 
