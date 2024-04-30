@@ -49,7 +49,7 @@ default_params = {
     'eval_interval': 10,
     'patience': 5,
     'description': 'Diffu_norm_score',
-    'long_head': False,
+    'long_head': True,
     'diversity_measure': False,
     'epoch_time_avg': False
 }
