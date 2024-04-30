@@ -134,7 +134,7 @@ def cold_hot_long_short(data_raw, dataset_name):
     len_seq_dict = {'short': [], 'mid_short': [], 'mid': [], 'mid_long': [], 'long': []}
     for id_temp, len_temp in enumerate(len_list):
         if dataset_name == 'ml-1m':
-            temp_seq = data_raw['train'][id_temp+1] + data_raw['val'][id_temp+1] + data_raw['test'][id_temp+1]
+            temp_seq = data_raw['train'][id_temp+1] + data_raw['val'][id_temp] + data_raw['test'][id_temp+1]
         else:
             temp_seq = data_raw['train'][id_temp] + data_raw['val'][id_temp] + data_raw['test'][id_temp]
         if len_temp <= len_short:
