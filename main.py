@@ -115,13 +115,13 @@ def cold_hot_long_short(data_raw, dataset_name):
         if item_temp[0] in hot_item:
             hot_ids.append(id_temp)
             if dataset_name == 'ml-1m':
-                hot_list.append(data_raw['train'][id_temp+1] + data_raw['val'][id_temp+1] + data_raw['test'][id_temp+1])
+                hot_list.append(data_raw['train'][id_temp] + data_raw['val'][id_temp] + data_raw['test'][id_temp])
             else:
                 hot_list.append(data_raw['train'][id_temp] + data_raw['val'][id_temp] + data_raw['test'][id_temp])
         else:
             cold_ids.append(id_temp)
             if dataset_name == 'ml-1m':
-                cold_list.append(data_raw['train'][id_temp+1] + data_raw['val'][id_temp+1] + data_raw['test'][id_temp+1])
+                cold_list.append(data_raw['train'][id_temp] + data_raw['val'][id_temp] + data_raw['test'][id_temp])
             else:
                 cold_list.append(data_raw['train'][id_temp] + data_raw['val'][id_temp] + data_raw['test'][id_temp])
     cold_hot_dict = {'hot': hot_list, 'cold': cold_list}
