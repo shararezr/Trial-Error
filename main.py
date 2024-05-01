@@ -22,7 +22,7 @@ import time
 default_params = {
     'dataset': 'ml-1m',
     'log_file': 'log/',
-    'random_seed': 2200,
+    'random_seed': 2100,
     'max_len': 70,
     'device': 'cuda',
     'num_gpu': 2,
@@ -33,7 +33,7 @@ default_params = {
     'hidden_act': 'gelu',
     'num_blocks': 4,
     'epochs': 300,
-    'decay_step':200,
+    'decay_step':150,
     'gamma': 0.1,
     'metric_ks': [5, 10, 20],
     'optimizer': 'Adam',
