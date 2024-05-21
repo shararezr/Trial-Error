@@ -469,38 +469,69 @@ def main(args):
         cold_hot_dict, len_seq_dict, split_hotcold, split_length, list_len, list_num = cold_hot_long_short(data_raw, args.dataset)
         cold_data = Data_CHLS(cold_hot_dict['cold'], args)
         cold_data_loader = cold_data.get_pytorch_dataloaders()
-        print('--------------Cold item-----------------------')
-        LSHT_inference(best_model, args, cold_data_loader)
+        #print('--------------Cold item-----------------------')
+        #LSHT_inference(best_model, args, cold_data_loader)
 
         hot_data = Data_CHLS(cold_hot_dict['hot'], args)
         hot_data_loader = hot_data.get_pytorch_dataloaders()
-        print('--------------hot item-----------------------')
-        LSHT_inference(best_model, args, hot_data_loader)
+        #print('--------------hot item-----------------------')
+        #LSHT_inference(best_model, args, hot_data_loader)
 
         short_data = Data_CHLS(len_seq_dict['short'], args)
         short_data_loader = short_data.get_pytorch_dataloaders()
-        print('--------------Short-----------------------')
-        LSHT_inference(best_model, args, short_data_loader)
+        #print('--------------Short-----------------------')
+        #LSHT_inference(best_model, args, short_data_loader)
 
         mid_short_data = Data_CHLS(len_seq_dict['mid_short'], args)
         mid_short_data_loader = mid_short_data.get_pytorch_dataloaders()
-        print('--------------Mid_short-----------------------')
-        LSHT_inference(best_model, args, mid_short_data_loader)
+        #print('--------------Mid_short-----------------------')
+        #LSHT_inference(best_model, args, mid_short_data_loader)
 
         mid_data = Data_CHLS(len_seq_dict['mid'], args)
         mid_data_loader = mid_data.get_pytorch_dataloaders()
-        print('--------------Mid-----------------------')
-        LSHT_inference(best_model, args, mid_data_loader)
+        #print('--------------Mid-----------------------')
+        #LSHT_inference(best_model, args, mid_data_loader)
 
         mid_long_data = Data_CHLS(len_seq_dict['mid_long'], args)
         mid_long_data_loader = mid_long_data.get_pytorch_dataloaders()
-        print('--------------Mid_long-----------------------')
-        LSHT_inference(best_model, args, mid_long_data_loader)
+        #print('--------------Mid_long-----------------------')
+        #LSHT_inference(best_model, args, mid_long_data_loader)
 
         long_data = Data_CHLS(len_seq_dict['long'], args)
         long_data_loader = long_data.get_pytorch_dataloaders()
-        print('--------------Long-----------------------')
-        LSHT_inference(best_model, args, long_data_loader)
+        #print('--------------Long-----------------------')
+        #LSHT_inference(best_model, args, long_data_loader)
+
+                # Run inference and collect results
+        results = {}
+        data_segments = {
+            'cold': cold_data_loader,
+            'hot': hot_data_loader,
+            'short': short_data_loader,
+            'mid_short': mid_short_data_loader,
+            'mid': mid_data_loader,
+            'mid_long': mid_long_data_loader,
+            'long': long_data_loader
+        }
+        
+        for segment, loader in data_segments.items():
+            print(f'--------------{segment.capitalize()}-----------------------')
+            metric = LSHT_inference(best_model, args, loader)
+            results[segment] = metric
+        
+        # Plot the results
+        segments = list(results.keys())
+        metrics = list(results.values())
+        
+        plt.figure(figsize=(10, 6))
+        plt.bar(segments, metrics, color='skyblue')
+        plt.xlabel('Data Segment')
+        plt.ylabel('Performance Metric')
+        plt.title('Performance of Model on Different Data Segments')
+        plt.show()
+        plt.legend()
+        plt.savefig('plot9.png')  # Save the plot as an image file
+        plt.close()  # Close the plot to release memory
 
     return best_model, test_results, val_metrics_dict_mean, train_losses, target_pre, label_pre, learning_rates
 
