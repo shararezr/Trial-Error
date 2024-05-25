@@ -185,7 +185,7 @@ def model_train(tra_data_loader, val_data_loader, test_data_loader, model_joint,
     if args.eval_interval > epochs:
         best_model = copy.deepcopy(model_joint)
 
-    best_model = copy.deepcopy(model_joint)
+    #best_model = copy.deepcopy(model_joint)
     top_100_item = []
     with torch.no_grad():
         test_metrics_dict = {'HR@5': [], 'NDCG@5': [], 'HR@10': [], 'NDCG@10': [], 'HR@20': [], 'NDCG@20': []}
