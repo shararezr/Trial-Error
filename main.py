@@ -47,7 +47,7 @@ default_params = {
     'noise_schedule': 'trunc_lin',
     'rescale_timesteps': True,
     'eval_interval':3,
-    'patience': 5,
+    'patience': 3,
     'description': 'Diffu_norm_score',
     'long_head': True,
     'diversity_measure': False,
