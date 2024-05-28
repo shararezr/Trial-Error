@@ -497,7 +497,7 @@ class DiffuRec(nn.Module):
         return noise_x_t
 
     def forward(self, item_rep, item_tag, mask_seq):
-        noise = th.randn_like(item_tag) + 0.1*th.randn_like(item_tag)
+        noise = th.randn_like(item_tag) 
         t, weights = self.schedule_sampler.sample(item_rep.shape[0], item_tag.device) ## t is sampled from schedule_sampler
 
         # t = self.scale_t(t)
